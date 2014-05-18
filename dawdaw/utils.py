@@ -37,3 +37,7 @@ def default(**kwargs):
     global_state["current_state"]["defaults"].update(kwargs)
     yield
     global_state["current_state"]["defaults"] = previous_default
+
+
+def test(command, *args, **kwargs):
+    return global_state["salt"]["cmd.retcode"](command, *args, **kwargs) == 0
