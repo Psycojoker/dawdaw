@@ -11,6 +11,7 @@ def salt_render(content, localtion, name, env, tmplpath, **kwargs):
         "name": name,
         "content": {},
         "debug": False,
+        "requires": [],
     }
 
     # YOLO

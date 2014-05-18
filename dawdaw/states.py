@@ -24,14 +24,29 @@ class FunctionWrapper(object):
         name, content, module = self.generate_state(name, *args, **kwargs)
         global_state["current_state"]["content"][name] = content
 
+        reference = {self.module_name: name}
+
+        global_state["current_state"]["requires"].append(reference)
+
         # this way, you can reuse this in watch clauses
-        return {module: name}
+        return reference
 
     def generate_state(self, name, *args, **kwargs):
         module = "%s.%s" % (self.module_name, self.name)
         return name, {
-            module: self.dict_to_salt_lame_list(kwargs)
+            module: self.set_requires(self.dict_to_salt_lame_list(kwargs)),
         }, module
+
+    def set_requires(self, state_content):
+        if not global_state["current_state"]["requires"]:
+            return state_content
+
+        state_content.append({
+            "require": global_state["current_state"]["requires"][:],
+        })
+
+        print state_content
+        return state_content
 
     def dict_to_salt_lame_list(self, the_dict):
         to_return = []
