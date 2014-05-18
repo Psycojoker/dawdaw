@@ -33,6 +33,7 @@ class FunctionWrapper(object):
         return to_return
 
 
+# black magic area, wrap salt state functions on import
 class SaltStateWrapperBuilder(dict):
     def __init__(self, globals, baked_args={}):
         self.globals = globals
