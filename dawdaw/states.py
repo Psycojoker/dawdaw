@@ -33,8 +33,8 @@ class FunctionWrapper(object):
 
     def generate_state(self, name, *args, **kwargs):
         module = "%s.%s" % (self.module_name, self.name)
-        return name, {
-            module: self.set_requires(self.dict_to_salt_lame_list(kwargs)),
+        return "%s_%s" % (global_state["current_state"]["name"], name), {
+            module: [{"name": name}] + self.set_requires(self.dict_to_salt_lame_list(kwargs)),
         }, module
 
     def set_requires(self, state_content):
