@@ -51,7 +51,6 @@ class FunctionWrapper(object):
             current_requires = existing_require[0].values()[0]
             current_requires.extend([x.copy() for x in requires if x not in current_requires])
 
-        print state_content
         return state_content
 
     def dict_to_salt_lame_list(self, the_dict):
