@@ -21,9 +21,14 @@ class FunctionWrapper(object):
         self.module_name = module_name
 
     def __call__(self, name, *args, **kwargs):
-        global_state["current_state"]["content"][name] = {
-            "%s.%s" % (self.module_name, self.name): self.dict_to_salt_lame_list(kwargs)
-        }
+        name, content, module = self.generate_state(name, *args, **kwargs)
+        global_state["current_state"]["content"][name] = content
+
+    def generate_state(self, name, *args, **kwargs):
+        module = "%s.%s" % (self.module_name, self.name)
+        return name, {
+            module: self.dict_to_salt_lame_list(kwargs)
+        }, module
 
     def dict_to_salt_lame_list(self, the_dict):
         to_return = []
