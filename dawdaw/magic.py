@@ -1,1 +1,1 @@
-current_state = {}
+global_state = {}

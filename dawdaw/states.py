@@ -1,7 +1,7 @@
 import sys
 from types import ModuleType
 
-from .magic import current_state
+from .magic import global_state
 
 
 class StateWrapper(object):
@@ -21,10 +21,9 @@ class FunctionWrapper(object):
         self.module_name = module_name
 
     def __call__(self, name, *args, **kwargs):
-        current_state["current_state"]["content"][name] = {
+        global_state["current_state"]["content"][name] = {
             "%s.%s" % (self.module_name, self.name): self.dict_to_salt_lame_list(kwargs)
         }
-        print current_state
 
     def dict_to_salt_lame_list(self, the_dict):
         to_return = []
