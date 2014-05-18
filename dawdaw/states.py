@@ -41,9 +41,15 @@ class FunctionWrapper(object):
         if not global_state["current_state"]["requires"]:
             return state_content
 
-        state_content.append({
-            "require": global_state["current_state"]["requires"][:],
-        })
+        existing_require = filter(lambda x: x.keys()[0] == "require", state_content)
+        requires = global_state["current_state"]["requires"]
+        if not existing_require:
+            state_content.append({
+                "require": [x.copy() for x in requires],
+            })
+        else:
+            current_requires = existing_require[0].values()[0]
+            current_requires.extend([x.copy() for x in requires if x not in current_requires])
 
         print state_content
         return state_content
