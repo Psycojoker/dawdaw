@@ -1,4 +1,6 @@
 import yaml
+from contextlib import contextmanager
+
 from .magic import global_state
 
 
@@ -12,6 +14,7 @@ def salt_render(content, localtion, name, env, tmplpath, **kwargs):
         "content": {},
         "debug": False,
         "requires": [],
+        "defaults": {},
     }
 
     # YOLO
@@ -22,3 +25,11 @@ def salt_render(content, localtion, name, env, tmplpath, **kwargs):
         print yaml.safe_dump(global_state["current_state"]["content"], default_flow_style=False)
 
     return global_state["current_state"]["content"]
+
+
+@contextmanager
+def default(**kwargs):
+    previous_default = global_state["current_state"]["defaults"].copy()
+    global_state["current_state"]["defaults"].update(kwargs)
+    yield
+    global_state["current_state"]["defaults"] = previous_default

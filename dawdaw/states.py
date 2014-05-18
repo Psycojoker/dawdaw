@@ -1,4 +1,5 @@
 import sys
+import inspect
 from types import ModuleType
 
 from .magic import global_state
@@ -33,8 +34,14 @@ class FunctionWrapper(object):
 
     def generate_state(self, name, *args, **kwargs):
         module = "%s.%s" % (self.module_name, self.name)
+
+        values = self.dict_to_salt_lame_list(kwargs)
+        values = self.set_requires(values)
+        values = self.set_defaults(values)
+        values = [{"name": name}] + values
+
         return "%s_%s" % (global_state["current_state"]["name"], name), {
-            module: [{"name": name}] + self.set_requires(self.dict_to_salt_lame_list(kwargs)),
+            module: values,
         }, module
 
     def set_requires(self, state_content):
@@ -59,6 +66,14 @@ class FunctionWrapper(object):
             # so lame conversion
             to_return.append({x: y for x, y in [item]})
         return to_return
+
+    def set_defaults(self, values):
+        args = inspect.getargspec(self.function).args
+
+        for default in global_state["current_state"]["defaults"]:
+            if default in args and default not in [x.keys()[0] for x in values]:
+                values.append({default: global_state["current_state"]["defaults"][default]})
+        return values
 
 
 # black magic area, wrap salt state functions on import
