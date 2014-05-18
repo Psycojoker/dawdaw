@@ -19,6 +19,6 @@ def salt_render(content, localtion, name, env, tmplpath, **kwargs):
 
     if global_state["current_state"]["debug"]:
         print "debug:"
-        print yaml.dump(global_state["current_state"]["content"], default_flow_style=False)
+        print yaml.safe_dump(global_state["current_state"]["content"], default_flow_style=False)
 
     return global_state["current_state"]["content"]
