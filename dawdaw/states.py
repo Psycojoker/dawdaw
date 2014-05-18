@@ -24,6 +24,9 @@ class FunctionWrapper(object):
         name, content, module = self.generate_state(name, *args, **kwargs)
         global_state["current_state"]["content"][name] = content
 
+        # this way, you can reuse this in watch clauses
+        return {module: name}
+
     def generate_state(self, name, *args, **kwargs):
         module = "%s.%s" % (self.module_name, self.name)
         return name, {
