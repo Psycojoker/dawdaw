@@ -8,7 +8,11 @@ def debug(value=True):
     global_state["current_state"]["debug"] = value
 
 
-def salt_render(content, localtion, name, env, tmplpath, **kwargs):
+def salt_render(content, localtion, name, env, tmplpath, salt, grains, opts, pillar, **kwargs):
+    global_state["salt"] = salt
+    global_state["grains"] = grains
+    global_state["opts"] = opts
+    global_state["pillar"] = pillar
     global_state["current_state"] = {
         "name": name,
         "content": {},
