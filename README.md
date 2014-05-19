@@ -313,7 +313,7 @@ Example:
 ```python
 from dawdaw.states import include, pkg
 
-some_state = include("some_state")
+some_state = include("some_state", in_dawdaw=False)
 
 pkg.installed("stuff", watch=[some_state.get("a_module", "a_name")])
 ```
