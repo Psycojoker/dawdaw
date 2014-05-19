@@ -331,7 +331,7 @@ if some_stuff:
 Licence
 -------
 
-Beerware.
+Belgian Beerware.
 
 Footnotes
 ---------

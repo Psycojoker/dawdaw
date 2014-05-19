@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # -*- coding:Utf-8 -*-
 
-# "THE BEER-WARE LICENSE" (Revision 42):
+# "THE BELGIAN BEER-WARE LICENSE" (Revision 42):
 # <cortex@worlddomination.be> wrote this file. As long as you retain this notice
 # you can do whatever you want with this stuff. If we meet some day, and you
-# think this stuff is worth it, you can buy me a beer in return Laurent Peuch
+# think this stuff is worth it, you can buy me a belgian beer in return -- Laurent Peuch
 
 from setuptools import setup
 
