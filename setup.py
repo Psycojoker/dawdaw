@@ -1,6 +1,11 @@
 #!/usr/bin/python
 # -*- coding:Utf-8 -*-
 
+# "THE BEER-WARE LICENSE" (Revision 42):
+# <cortex@worlddomination.be> wrote this file. As long as you retain this notice
+# you can do whatever you want with this stuff. If we meet some day, and you
+# think this stuff is worth it, you can buy me a beer in return Laurent Peuch
+
 from setuptools import setup
 
 setup(name='dawdaw',
@@ -13,7 +18,7 @@ setup(name='dawdaw',
       install_requires=[],
       packages=['dawdaw'],
       py_modules=[],
-      license='gplv3+',
+      license='beerware',
       scripts=[],
       keywords='salt renderer',
      )
