@@ -3,7 +3,6 @@
 # you can do whatever you want with this stuff. If we meet some day, and you
 # think this stuff is worth it, you can buy me a belgian beer in return -- Laurent Peuch
 
-import yaml
 from contextlib import contextmanager
 
 from .magic import global_state
@@ -30,6 +29,7 @@ def salt_render(content, localtion, name, env, tmplpath, salt, grains, opts, pil
     exec(content.read())
 
     if global_state["current_state"]["debug"]:
+        import yaml
         print "debug:"
         print yaml.safe_dump(global_state["current_state"]["content"], default_flow_style=False)
 
