@@ -358,6 +358,8 @@ if some_stuff:
     debug(False)
 ```
 
+Also, since this is full python you can drop in [ipdb](https://github.com/gotcha/ipdb) to just debug your code. **Be sure to only do that if you run salt locally**.
+
 Licence
 -------
 
