@@ -10,6 +10,24 @@ from types import ModuleType
 from .magic import global_state
 
 
+def include(name, in_dawdaw=True):
+    global_state["current_state"]["requires"].append({"sls": name})
+    global_state["current_state"]["content"].setdefault("include", []).append(name)
+    return IncludedModule(name, in_dawdaw=in_dawdaw)
+
+
+class IncludedModule(object):
+    def __init__(self, name, in_dawdaw):
+        self.name = name
+        self.in_dawdaw = in_dawdaw
+
+    def get(self, module, name):
+        if self.in_dawdaw:
+            return {module: "%s_%s" % (self.name, name)}
+        else:
+            return {module: name}
+
+
 class StateWrapper(object):
     def __init__(self, state, name):
         self.state = state
