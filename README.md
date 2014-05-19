@@ -114,7 +114,11 @@ Become:
 ```python
 from dawdaw.states import state_module
 
-state_module.state_function("state_name", argument_1="value_1", argument_2="value_2", argument_3="value_3", ...)
+state_module.state_function("state_name",
+                            argument_1="value_1",
+                            argument_2="value_2",
+                            argument_3="value_3",
+                            ...)
 ```
 
 ### Another example
