@@ -3,12 +3,12 @@ Introduction
 
 Dawdaw is an experiment to make a [SaltStack](http://www.saltstack.com/) custom [renderer](http://docs.saltstack.com/en/latest/ref/renderers/index.html) (the stuff that allows you to write your states in yaml/jinja2/mako/other) in an attempt to solve those problems:
 
-* current states are extremely too verbose to write
-* you often repeat yourself way too much
+* current states are too verbose to write
+* you often repeat yourself too much
 * really have a linear states declaration for requires
-* explicit requires on included states, because global sucks
-* namespacing all the things, because global sucks
-* indirectly trying to solve the "salt states totally sucks are being redistributed" problem by going full python, you can now use setup.py and pypi/pip to redistribute you work¹
+* explicit requires on included states, to avoid globals
+* namespacing all the things, to avoid globals
+* indirectly trying to solve the "salt states are very hard to redistribute" problem by going full python, you can now use setup.py and pypi/pip to redistribute you work¹
 
 Disadvantages: you move await from full declarative code (which you were
 already doing in fact with jinja2 templates) to go back to python code. This
