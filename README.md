@@ -233,8 +233,8 @@ a = module.a("...")
 module.b("...", require=[a])  # remember, requires are set in a list!
 ```
 
-Namespacig, watch or more generally: refer to a state
------------------------------------------------------
+Namespacig, watch or more generally: how to refer to a state
+------------------------------------------------------------
 
 In dawdaw, every state has its name namespaced with the name of the file it is
 stored in. For example, this state:
