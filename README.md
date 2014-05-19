@@ -264,7 +264,8 @@ Include
 
 <code>include</code> works nearly the same than in salt. The only difference is
 that you only include one state at once, not a list of states. This allows the
-<code>include</code> to return a reference to the original state.
+<code>include</code> to return a representation of included sls file to
+reference states from this sls file.
 
 In the same fashion than state, every state that follows an include will
 require on it to enforce linear execution.
@@ -278,14 +279,32 @@ include("some_state")
 include("another_state")
 ```
 
-Reference example:
+### Reference:
+
+An include can be use to reference a state of the included sls file (and it's
+recommand to to avoid global namespaced reference) using the <code>.get</code>
+method. <code>.get</code> takes 2 parameters: the module and the name.
+
+Example:
 ```python
 from dawdaw.states import include, pkg
 
 some_state = include("some_state")
 include("another_state")
 
-pkg.installed("stuff", require=[some_state])
+pkg.installed("stuff", require=[some_state.get("a_module", "a_name")])
+```
+
+**If the included sls file is not a dawdaw file, you must pass the argument
+<code>in_dawdaw=False</code> to include because of namespacing.**
+
+Example:
+```python
+from dawdaw.states import include, pkg
+
+some_state = include("some_state")
+
+pkg.installed("stuff", watch=[some_state.get("a_module", "a_name")])
 ```
 
 Pillar, grains and opts
