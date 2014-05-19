@@ -214,7 +214,7 @@ In dawdaw, you don't have to care that much about requisites, a linear
 execution of the states in the order in which they are called is enforced. This
 mean, that, in this example, <code>module.b</code> will have a require on
 <code>module.a</code> and <code>module.c</code> will have a require on
-<code>module.b</code> **and** <code>module.c</code>:
+<code>module.a</code> **and** <code>module.b</code>:
 
 ```python
 module.a("...")
