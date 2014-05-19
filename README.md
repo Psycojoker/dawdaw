@@ -10,6 +10,13 @@ Dawdaw is an experiment to make a [SaltStack](http://www.saltstack.com/) custom 
 * namespacing all the things, because global sucks
 * indirectly trying to solve the "salt states totally sucks are being redistributed" problem by going full python, you can now use setup.py and pypi/pip to redistribute you work¹
 
+Disadvantages: you move await from full declarative code (which you were
+already doing in fact with jinja2 templates) to go back to python code. This
+is, on one hand very powerful, on the other hand probably too powerful (and may
+be way less easy to understand for devops that don't come from a programming
+background). That works for me because I'm a python dev and I'm using this for
+my personal usages, but that might not fit your case.
+
 Sample
 ======
 
