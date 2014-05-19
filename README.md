@@ -182,7 +182,7 @@ with default(user='psycojoker', group='psycojoker', runas='psycojoker'):
 Modules
 -------
 
-(The stuff you use in the CLI like <code>salt '*' cmd.run "ls /tmp"). As simple
+(The stuff you use in the CLI like <code>salt '*' cmd.run "ls /tmp"</code>). As simple
 as states, just import it and call it like normal python code (and play with
 it's return like in normal python):
 
