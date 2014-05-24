@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Dawdaw : A custom saltstack states renderer for extremely lazy python devs" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Dawdaw</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Psycojoker/dawdaw">View on GitHub</a>
+
+          <h1 id="project_title">Dawdaw</h1>
+          <h2 id="project_tagline">A custom saltstack states renderer for extremely lazy python devs</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/Psycojoker/dawdaw/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/Psycojoker/dawdaw/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="introduction" class="anchor" href="#introduction"><span class="octicon octicon-link"></span></a>Introduction</h1>
+
+<p>Dawdaw is an experiment to make a <a href="http://www.saltstack.com/">SaltStack</a> custom <a href="http://docs.saltstack.com/en/latest/ref/renderers/index.html">renderer</a> (the stuff that allows you to write your states in yaml/jinja2/mako/other) in an attempt to solve those problems:</p>
+
+<ul>
+<li>current states are too verbose to write</li>
+<li>you often repeat yourself too much</li>
+<li>really have a linear states declaration for requires</li>
+<li>explicit requires on included states, to avoid globals</li>
+<li>namespacing all the things, to avoid globals</li>
+<li>indirectly trying to solve the "salt states are very hard to redistribute" problem by going full python, you can now use setup.py and pypi/pip to redistribute you work¹</li>
+</ul><p>Disadvantages: you move await from full declarative code (which you were
+already doing in fact with jinja2 templates) to go back to python code. This
+is, on one hand very powerful, on the other hand probably too powerful (and may
+be way less easy to understand for devops that don't come from a programming
+background). That works for me because I'm a python dev and I'm using this for
+my personal usages, but that might not fit your case.</p>
+
+<h1>
+<a name="sample" class="anchor" href="#sample"><span class="octicon octicon-link"></span></a>Sample</h1>
+
+<p>Move from:</p>
+
+<div class="highlight highlight-yaml"><pre><span class="l-Scalar-Plain">include</span><span class="p-Indicator">:</span>
+  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">dotfiles</span>
+
+<span class="l-Scalar-Plain">wyrd-pkgs</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">pkg.installed</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">wyrd</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">require</span><span class="p-Indicator">:</span>
+      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">sls</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">dotfiles</span>
+
+<span class="l-Scalar-Plain">reminds.git</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">git.latest</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ssh://git@bitbucket.org/psycojoker/reminds.git</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">runas</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">psycojoker</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">target</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/home/psycojoker/reminds/</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">require</span><span class="p-Indicator">:</span>
+      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">pkg</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">git</span>
+
+<span class="l-Scalar-Plain">cd /home/psycojoker/reminds/ &amp;&amp; bash init</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">cmd.run</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">unless</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ls /home/psycojoker/.reminders /home/psycojoker/.reminders.gcl</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">user</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">psycojoker</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">require</span><span class="p-Indicator">:</span>
+      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">git</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">reminds.git</span>
+</pre></div>
+
+<p>To:</p>
+
+<div class="highlight highlight-python"><pre><span class="c">#!dawdaw_template</span>
+
+<span class="kn">from</span> <span class="nn">dawdaw.states</span> <span class="kn">import</span> <span class="n">pkg</span><span class="p">,</span> <span class="n">git</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">include</span>
+<span class="kn">from</span> <span class="nn">dawdaw.utils</span> <span class="kn">import</span> <span class="n">default</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">debug</span>
+
+<span class="n">dotfiles</span> <span class="o">=</span> <span class="n">include</span><span class="p">(</span><span class="s">"dotfiles"</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">default</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="s">"psycojoker"</span><span class="p">,</span> <span class="n">runas</span><span class="o">=</span><span class="s">"psycojoker"</span><span class="p">):</span>
+    <span class="n">pkg</span><span class="o">.</span><span class="n">installed</span><span class="p">(</span><span class="s">"wyrd"</span><span class="p">,</span>
+                  <span class="n">require</span><span class="o">=</span><span class="p">[</span><span class="n">dotfiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">"pkg"</span><span class="p">,</span> <span class="s">"dotfiles-pkgs"</span><span class="p">)])</span>
+    <span class="n">git</span><span class="o">.</span><span class="n">latest</span><span class="p">(</span><span class="s">"ssh://git@bitbucket.org/psycojoker/reminds.git"</span><span class="p">,</span>
+               <span class="n">target</span><span class="o">=</span><span class="s">"/home/psycojoker/reminds/"</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">test</span><span class="p">(</span><span class="s">"ls /home/psycojoker/.reminders /home/psycojoker/.reminders.gcl"</span><span class="p">):</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s">"cd /home/psycojoker/reminds/ &amp;&amp; bash init"</span><span class="p">)</span>
+</pre></div>
+
+<h1>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h1>
+
+<pre><code>pip install dawdaw
+
+# this is how you install a renderer in salt
+# if you know a better way to distribute it, plz tell me
+
+# adapt the path to the location of your salt data
+mkdir -p /srv/salt/_renderers
+touch /srv/salt/_renderers/__init__.py
+
+curl "https://raw.githubusercontent.com/Psycojoker/dawdaw/master/dawdaw_template.py" &gt; /srv/salt/_renderers/dawdaw_template.py
+
+# if you use salt in master/slave
+salt '*' saltutil.sync_renderers
+# or locally
+salt-call --local saltutil.sync_renderers
+</code></pre>
+
+<p>Once it's done, you can normally run highstates, this will handle
+dawdaw_template like any regular other state.</p>
+
+<h1>
+<a name="documentation" class="anchor" href="#documentation"><span class="octicon octicon-link"></span></a>Documentation</h1>
+
+<p>Once you have installed dawdaw (see previous section), to use it, you simply need to put this as the first line of your file (<code>dawdaw_template</code> being the name of the file under which you have redirected the curl command bellow):</p>
+
+<div class="highlight highlight-python"><pre><span class="c">#!dawdaw_template</span>
+</pre></div>
+
+<h2>
+<a name="states" class="anchor" href="#states"><span class="octicon octicon-link"></span></a>States</h2>
+
+<p>Using states is extremely simple: just import the state module and call the
+corresponding function like a python function.</p>
+
+<h3>
+<a name="example" class="anchor" href="#example"><span class="octicon octicon-link"></span></a>Example</h3>
+
+<div class="highlight highlight-yaml"><pre><span class="l-Scalar-Plain">state_name</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">state_module.state_function</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">argument_1</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">value_1</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">argument_2</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">value_2</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">argument_3</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">value_3</span>
+    <span class="l-Scalar-Plain">...</span>
+</pre></div>
+
+<p>Become:</p>
+
+<div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">dawdaw.states</span> <span class="kn">import</span> <span class="n">state_module</span>
+
+<span class="n">state_module</span><span class="o">.</span><span class="n">state_function</span><span class="p">(</span><span class="s">"state_name"</span><span class="p">,</span>
+                            <span class="n">argument_1</span><span class="o">=</span><span class="s">"value_1"</span><span class="p">,</span>
+                            <span class="n">argument_2</span><span class="o">=</span><span class="s">"value_2"</span><span class="p">,</span>
+                            <span class="n">argument_3</span><span class="o">=</span><span class="s">"value_3"</span><span class="p">,</span>
+                            <span class="o">...</span><span class="p">)</span>
+</pre></div>
+
+<h3>
+<a name="another-example" class="anchor" href="#another-example"><span class="octicon octicon-link"></span></a>Another example</h3>
+
+<div class="highlight highlight-yaml"><pre><span class="l-Scalar-Plain">https://github.com/Psycojoker/dawdaw</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">git.latest</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">target</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/tmp/dawdaw</span>
+</pre></div>
+
+<p>Become:</p>
+
+<div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">dawdaw.states</span> <span class="kn">import</span> <span class="n">git</span>
+
+<span class="n">git</span><span class="o">.</span><span class="n">latest</span><span class="p">(</span><span class="s">"https://github.com/Psycojoker/dawdaw"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">"/tmp/dawdaw"</span><span class="p">)</span>
+</pre></div>
+
+<h2>
+<a name="the-default-context-manager" class="anchor" href="#the-default-context-manager"><span class="octicon octicon-link"></span></a>The 'default' context manager</h2>
+
+<p>In salt, you often end up repeating the same arguments a lot, like settings the
+prioprietary of the file to the same user a lot. This is boring and not error proof.
+Sure, the
+'<a href="http://docs.saltstack.com/en/latest/ref/states/requisites.html#use">use</a>'
+exists, but it's awkward and no one knows about it. Thanks to python, we have
+context managers and we can use the <code>with</code> keyword to handle that.</p>
+
+<p>The <code>default</code> context manager create a context in which <strong>every
+command that waits for some specific keywords will be called with it</strong>.</p>
+
+<h3>
+<a name="example-1" class="anchor" href="#example-1"><span class="octicon octicon-link"></span></a>Example</h3>
+
+<div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">dawdaw.states</span> <span class="kn">import</span> <span class="n">git</span><span class="p">,</span> <span class="nb">file</span>
+<span class="kn">from</span> <span class="nn">dawdaw.utils</span> <span class="kn">import</span> <span class="n">default</span>
+
+
+<span class="k">with</span> <span class="n">default</span><span class="p">(</span><span class="n">makedirs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span> 
+    <span class="c"># git won't received the 'makedirs' keyword</span>
+    <span class="n">git</span><span class="o">.</span><span class="n">latest</span><span class="p">(</span><span class="s">"https:/..."</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">"/some/stuf"</span><span class="p">)</span>
+
+    <span class="c"># file will received it</span>
+    <span class="nb">file</span><span class="o">.</span><span class="n">managed</span><span class="p">(</span><span class="s">"/some/stuff/subdir/settings_prod.py"</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">"..."</span><span class="p">)</span>
+</pre></div>
+
+<p>I often end up using it to settings user and groups:</p>
+
+<div class="highlight highlight-python"><pre><span class="k">with</span> <span class="n">default</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="s">'psycojoker'</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s">'psycojoker'</span><span class="p">,</span> <span class="n">runas</span><span class="o">=</span><span class="s">'psycojoker'</span><span class="p">):</span> 
+    <span class="c"># ...</span>
+</pre></div>
+
+<h2>
+<a name="modules" class="anchor" href="#modules"><span class="octicon octicon-link"></span></a>Modules</h2>
+
+<p>(The stuff you use in the CLI like <code>salt '*' cmd.run "ls /tmp"</code>). As simple
+as states, just import it and call it like normal python code (and play with
+it's return like in normal python):</p>
+
+<div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">dawdaw.modules</span> <span class="kn">import</span> <span class="n">cmd</span>
+
+<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">cmd</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s">"ls /tmp"</span><span class="p">):</span>
+    <span class="c"># do some stuff with 'f'</span>
+</pre></div>
+
+<h2>
+<a name="the-test-helper" class="anchor" href="#the-test-helper"><span class="octicon octicon-link"></span></a>The 'test' helper</h2>
+
+<p>Sometime, you need to test if a command return the code '0', you can do it
+using <code>cmd.retcode("...")</code> but that's quite boring. Dawdaw provides
+a simple helper to do that for you:</p>
+
+<div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">dawdaw.utils</span> <span class="kn">import</span> <span class="n">test</span>
+
+<span class="k">if</span> <span class="n">test</span><span class="p">(</span><span class="s">"ls /tmp/this_file_exist"</span><span class="p">):</span>
+    <span class="c"># do some stuff</span>
+</pre></div>
+
+<h2>
+<a name="requisites" class="anchor" href="#requisites"><span class="octicon octicon-link"></span></a>Requisites</h2>
+
+<p>In dawdaw, you don't have to care that much about requisites, a linear
+execution of the states in the order in which they are called is enforced. This
+mean, that, in this example, <code>module.b</code> will have a require on
+<code>module.a</code> and <code>module.c</code> will have a require on
+<code>module.a</code> <strong>and</strong> <code>module.b</code>:</p>
+
+<div class="highlight highlight-python"><pre><span class="n">module</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s">"..."</span><span class="p">)</span>
+<span class="n">module</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="s">"..."</span><span class="p">)</span>
+<span class="n">module</span><span class="o">.</span><span class="n">c</span><span class="p">(</span><span class="s">"..."</span><span class="p">)</span>
+</pre></div>
+
+<p>The requires are only set if the state is actually called, so you can use 'if'
+and other control flow structure the way you want like in normal python code.</p>
+
+<p><strong>If you stil need/want to set explicit requires</strong>, every state return a
+reference to itself once it is called, so you can simply do it this way:</p>
+
+<div class="highlight highlight-python"><pre><span class="n">a</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s">"..."</span><span class="p">)</span>
+<span class="n">module</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="s">"..."</span><span class="p">,</span> <span class="n">require</span><span class="o">=</span><span class="p">[</span><span class="n">a</span><span class="p">])</span>  <span class="c"># remember, requires are set in a list!</span>
+</pre></div>
+
+<h2>
+<a name="namespacig-watch-or-more-generally-how-to-refer-to-a-state" class="anchor" href="#namespacig-watch-or-more-generally-how-to-refer-to-a-state"><span class="octicon octicon-link"></span></a>Namespacig, watch or more generally: how to refer to a state</h2>
+
+<p>In dawdaw, every state has its name namespaced with the name of the file it is
+stored in. For example, this state:
+<code>git.latest("<a href="https://github.com/Psycojoker/dawdaw%22">https://github.com/Psycojoker/dawdaw"</a>)</code> in the file
+<code>dawdaw.sls</code> will have the name
+<code>dawdaw_<a href="https://github.com/Psycojoker/dawdaw">https://github.com/Psycojoker/dawdaw</a></code>. **Keep this in mind
+if you want to refer to other states in non-dawdaw states.</p>
+
+<p>But when you are in dawdaw you don't have to care about that: every state
+returns a reference to itself once called, you can use that without caring
+about how it is done and without the risk of making stupide mistake or having
+to rename it everywhere. For example:</p>
+
+<div class="highlight highlight-python"><pre><span class="n">a</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s">"..."</span><span class="p">)</span>
+<span class="n">module</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="s">"..."</span><span class="p">,</span> <span class="n">watch</span><span class="o">=</span><span class="p">[</span><span class="n">a</span><span class="p">])</span>  <span class="c"># remember, watchs are set in a list!</span>
+</pre></div>
+
+<p>Works for <code>watch</code>, <code>watch_in</code>, <code>require</code>,
+<code>require_in</code>, <code>prereq</code>, <a href="http://docs.saltstack.com/en/latest/ref/states/requisites.html">the other
+requisites</a> etc
+... Basically everytime you need to reference a state.</p>
+
+<p>If you really need to do that by hand (don't), in reality, the reference is
+just a dict, so you can do this this way (don't forget about the namespacing!):</p>
+
+<div class="highlight highlight-python"><pre><span class="c"># in file example.sls</span>
+
+<span class="n">module</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s">"some_name"</span><span class="p">)</span>
+<span class="n">module</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="s">"..."</span><span class="p">,</span> <span class="n">watch</span><span class="o">=</span><span class="p">[{</span><span class="s">"module"</span><span class="p">:</span> <span class="s">"example_some_name"</span><span class="p">}])</span>  <span class="c"># remember, watchs are set in a list!</span>
+</pre></div>
+
+<p>But don't do that.</p>
+
+<h2>
+<a name="include" class="anchor" href="#include"><span class="octicon octicon-link"></span></a>Include</h2>
+
+<p><code>include</code> works nearly the same than in salt. The only difference is
+that you only include one state at once, not a list of states. This allows the
+<code>include</code> to return a representation of included sls file to
+reference states from this sls file.</p>
+
+<p>In the same fashion than state, every state that follows an include will
+require on it to enforce linear execution.</p>
+
+<h3>
+<a name="example-2" class="anchor" href="#example-2"><span class="octicon octicon-link"></span></a>Example:</h3>
+
+<div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">dawdaw.states</span> <span class="kn">import</span> <span class="n">include</span>
+
+<span class="n">include</span><span class="p">(</span><span class="s">"some_state"</span><span class="p">)</span>
+<span class="n">include</span><span class="p">(</span><span class="s">"another_state"</span><span class="p">)</span>
+</pre></div>
+
+<h3>
+<a name="reference" class="anchor" href="#reference"><span class="octicon octicon-link"></span></a>Reference:</h3>
+
+<p>An include can be use to reference a state of the included sls file (and it's
+recommand to to avoid global namespaced reference) using the <code>.get</code>
+method. <code>.get</code> takes 2 parameters: the module and the name.</p>
+
+<p>Example:</p>
+
+<div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">dawdaw.states</span> <span class="kn">import</span> <span class="n">include</span><span class="p">,</span> <span class="n">pkg</span>
+
+<span class="n">some_state</span> <span class="o">=</span> <span class="n">include</span><span class="p">(</span><span class="s">"some_state"</span><span class="p">)</span>
+<span class="n">include</span><span class="p">(</span><span class="s">"another_state"</span><span class="p">)</span>
+
+<span class="n">pkg</span><span class="o">.</span><span class="n">installed</span><span class="p">(</span><span class="s">"stuff"</span><span class="p">,</span> <span class="n">require</span><span class="o">=</span><span class="p">[</span><span class="n">some_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">"a_module"</span><span class="p">,</span> <span class="s">"a_name"</span><span class="p">)])</span>
+</pre></div>
+
+<p><strong>If the included sls file is not a dawdaw file, you must pass the argument
+<code>in_dawdaw=False</code> to include because of namespacing.</strong></p>
+
+<p>Example:</p>
+
+<div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">dawdaw.states</span> <span class="kn">import</span> <span class="n">include</span><span class="p">,</span> <span class="n">pkg</span>
+
+<span class="n">some_state</span> <span class="o">=</span> <span class="n">include</span><span class="p">(</span><span class="s">"some_state"</span><span class="p">,</span> <span class="n">in_dawdaw</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="n">pkg</span><span class="o">.</span><span class="n">installed</span><span class="p">(</span><span class="s">"stuff"</span><span class="p">,</span> <span class="n">watch</span><span class="o">=</span><span class="p">[</span><span class="n">some_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">"a_module"</span><span class="p">,</span> <span class="s">"a_name"</span><span class="p">)])</span>
+</pre></div>
+
+<h2>
+<a name="pillar-grains-and-opts" class="anchor" href="#pillar-grains-and-opts"><span class="octicon octicon-link"></span></a>Pillar, grains and opts</h2>
+
+<p>All those 3 salt artifacts are accessible very easily by simply importing them
+and they will behave the same way than they behave in jinja2 templates (hint:
+they are dictionaries):</p>
+
+<div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">dawdaw</span> <span class="kn">import</span> <span class="n">pillar</span><span class="p">,</span> <span class="n">grains</span><span class="p">,</span> <span class="n">opts</span>
+
+<span class="n">pillar</span><span class="p">[</span><span class="s">"stuff"</span><span class="p">]</span>
+</pre></div>
+
+<h2>
+<a name="debug" class="anchor" href="#debug"><span class="octicon octicon-link"></span></a>debug</h2>
+
+<p>Dawdaw comes with a helper <code>debug</code> to debug what it does. This helper will simply print
+on the shell the generated yaml (you'll see it in the logs or if you run salt
+locally using "salt-call --local").</p>
+
+<p>Usage:</p>
+
+<div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">dawdaw.utils</span> <span class="kn">import</span> <span class="n">debug</span>
+
+<span class="n">debug</span><span class="p">()</span>
+</pre></div>
+
+<p>You can pass a boolean argument to <code>debug</code> activated/desactivate debugging:</p>
+
+<div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">dawdaw.utils</span> <span class="kn">import</span> <span class="n">debug</span>
+
+<span class="n">debug</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">some_stuff</span><span class="p">:</span>
+    <span class="c"># finally don't need to debug</span>
+    <span class="n">debug</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+<p>Also, since this is full python you can drop in <a href="https://github.com/gotcha/ipdb">ipdb</a> to just debug your code. <strong>Be sure to only do that if you run salt locally</strong>.</p>
+
+<h2>
+<a name="licence" class="anchor" href="#licence"><span class="octicon octicon-link"></span></a>Licence</h2>
+
+<p>Belgian Beerware.</p>
+
+<h2>
+<a name="footnotes" class="anchor" href="#footnotes"><span class="octicon octicon-link"></span></a>Footnotes</h2>
+
+<p>I've had fun writing it, hopes you'll have using it. You don't want to know how it's made.</p>
+
+<p>¹: I have <a href="https://github.com/Psycojoker/cellar">another experiment</a> that try
+to solve this problem, but I'm not writing enough salt right now to move on
+it.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Dawdaw maintained by <a href="https://github.com/Psycojoker">Psycojoker</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
