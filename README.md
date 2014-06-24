@@ -237,10 +237,10 @@ Namespacig, watch or more generally: how to refer to a state
 ------------------------------------------------------------
 
 In dawdaw, every state has its name namespaced with the name of the file it is
-stored in. For example, this state:
+stored in and the module from which it's called. For example, this state:
 <code>git.latest("https://github.com/Psycojoker/dawdaw")</code> in the file
 <code>dawdaw.sls</code> will have the name
-<code>dawdaw_https://github.com/Psycojoker/dawdaw</code>. **Keep this in mind
+<code>dawdaw_git_https://github.com/Psycojoker/dawdaw</code>. **Keep this in mind
 if you want to refer to other states in non-dawdaw states.
 
 But when you are in dawdaw you don't have to care about that: every state
@@ -265,7 +265,7 @@ just a dict, so you can do this this way (don't forget about the namespacing!):
 # in file example.sls
 
 module.a("some_name")
-module.b("...", watch=[{"module": "example_some_name"}])  # remember, watchs are set in a list!
+module.b("...", watch=[{"module": "example_module_some_name"}])  # remember, watchs are set in a list!
 ```
 
 But don't do that.
