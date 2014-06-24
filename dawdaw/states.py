@@ -63,7 +63,7 @@ class FunctionWrapper(object):
         values = self.set_defaults(values)
         values = [{"name": name}] + values
 
-        return "%s_%s" % (global_state["current_state"]["name"], name), {
+        return "%s_%s" % (global_state["current_state"]["name"], "%s_%s" % (self.module_name, name)), {
             module: values,
         }, module
 
