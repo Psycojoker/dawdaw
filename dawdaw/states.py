@@ -10,6 +10,9 @@ from types import ModuleType
 from .magic import global_state
 
 
+salt_states = __import__("salt").states
+
+
 def include(name, in_dawdaw=True):
     global_state["current_state"]["requires"].append({"sls": name})
     global_state["current_state"]["content"].setdefault("include", []).append(name)
@@ -33,6 +36,10 @@ class StateWrapper(object):
         self.state = state
         self.name = name
         self.functions = {}
+
+        original_salt_state = getattr(salt_states, name)
+        if hasattr(original_salt_state, "__virtualname__"):
+            self.name = original_salt_state.__virtualname__
 
     def __getattr__(self, key):
         return self.functions.setdefault(key, FunctionWrapper(getattr(self.state, key), function_name=key, module_name=self.name))
