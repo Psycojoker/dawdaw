@@ -9,7 +9,7 @@
 from setuptools import setup
 
 setup(name='dawdaw',
-      version='0.1.1',
+      version='0.1.2',
       description='salt renderer for extremly lazy python dev',
       author='Laurent Peuch',
       long_description=open("README.md", "r").read(),
